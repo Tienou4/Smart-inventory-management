@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   description: 'Solution complète de gestion de stock pour PME et commerces',
 };
 
+
 export default function RootLayout({
   children,
 }: {

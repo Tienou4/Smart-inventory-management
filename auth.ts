@@ -60,7 +60,7 @@ export const {
   },
   providers: [
     Resend({
-        from: "onboarding@resend.dev"
+        from: "tienouulrichbrayanne@gmail.com"
     }),
     ...authConfig.providers,
   ],

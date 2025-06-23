@@ -1,9 +1,10 @@
 "use client";
-
+import React from 'react'; 
 import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -11,6 +12,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { productSchema } from '@/schemas/productSchema';
+import { z } from 'zod';
 import {
   Select,
   SelectContent,
@@ -29,30 +34,106 @@ interface ProductDialogProps {
   product?: any;
 }
 
+type ProductFormValues = z.infer<typeof productSchema>;
+
 export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) {
-  const [formData, setFormData] = useState({
-    name: product?.name || '',
-    sku: product?.sku || '',
-    barcode: product?.barcode || '',
-    category: product?.category || '',
-    description: product?.description || '',
-    price: product?.price || '',
-    cost: product?.cost || '',
-    stock: product?.stock || '',
-    minStock: product?.minStock || '',
-    maxStock: product?.maxStock || '',
-    location: product?.location || '',
-    supplier: product?.supplier || '',
-    active: product?.status === 'active' || true,
+  const router = useRouter();
+  const [formData, setFormData] = useState<ProductFormValues>({
+    name: product?.name || "",
+    sku: product?.sku || "",
+    category: product?.category || "",
+    price: product?.price || 0,
+    cost: product?.cost || 0,
+    stock: product?.stock || 0,
+    minStock: product?.minStock || 0,
+    maxStock: product?.maxStock || null,
+    barcode: product?.barcode || null,
+    description: product?.description || null,
+    location: product?.location || null,
+    supplier: product?.supplier || null,
+    active: product?.status === 'active' || false,
+    images: [],
   });
 
   const isEditing = !!product;
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Form data:', formData);
-    onClose();
+    setIsLoading(true);
+
+    try {
+      // Convertir les données en type approprié
+      const parsedData = {
+        name: formData.name,
+        sku: formData.sku,
+        category: formData.category,
+        price: typeof formData.price === 'string' ? parseFloat(formData.price) || 0 : formData.price,
+        cost: typeof formData.cost === 'string' ? parseFloat(formData.cost) || 0 : formData.cost,
+        stock: typeof formData.stock === 'string' ? parseInt(formData.stock) || 0 : formData.stock,
+        minStock: typeof formData.minStock === 'string' ? parseInt(formData.minStock) || 0 : formData.minStock,
+        maxStock: formData.maxStock ? (typeof formData.maxStock === 'string' ? parseInt(formData.maxStock) : formData.maxStock) : null,
+        barcode: formData.barcode || null,
+        description: formData.description || null,
+        location: formData.location || null,
+        supplier: formData.supplier || null,
+        active: formData.active,
+      };
+
+      // Valider avec Zod
+      const validated = productSchema.parse(parsedData);
+
+      // Envoyer les données via fetch
+      const url = isEditing ? `/api/products?id=${product?.id}` : "/api/products";
+      const method = isEditing ? "PUT" : "POST";
+
+      const body = new FormData();
+
+      body.append("name", validated.name);
+      body.append("sku", validated.sku);
+      body.append("category", validated.category);
+      body.append("price", validated.price.toString());
+      body.append("cost", validated.cost.toString());
+      body.append("stock", validated.stock.toString());
+      body.append("minStock", validated.minStock.toString());
+
+    if (validated.maxStock !== null && validated.maxStock !== undefined) {
+          body.append("maxStock", validated.maxStock.toString());
+      } else {
+        body.append("maxStock", "");
+      }
+
+      body.append("barcode", validated.barcode || "");
+      body.append("description", validated.description || "");
+      body.append("location", validated.location || "");
+      body.append("supplier", validated.supplier || "");
+      body.append("active", validated.active ? "true" : "false");
+
+      // Ajout des images
+      formData.images.forEach((file) => {
+        body.append("images", file);
+      });
+
+      const response = await fetch(url, { method, body });
+
+      if (!response.ok) throw new Error("Erreur lors de la sauvegarde");
+
+      const result = await response.json();
+      console.log("✅ Produit sauvegardé :", result);
+
+      onClose();
+      router.refresh();
+
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errorMessage = error.errors.map(e => `${e.path.join('.')} : ${e.message}`).join(", ");
+        alert(`Données invalides : ${errorMessage}`);
+      } else {
+        alert(`Échec de la soumission : ${(error as Error).message}`);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -62,8 +143,10 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
           <DialogTitle>
             {isEditing ? 'Modifier le produit' : 'Nouveau produit'}
           </DialogTitle>
+          <DialogDescription>
+            {isEditing ? 'Modifiez les informations de ce produit' : 'Créez un nouveau produit pour votre inventaire'}
+          </DialogDescription>
         </DialogHeader>
-
         <form onSubmit={handleSubmit} className="space-y-6">
           <Tabs defaultValue="general" className="w-full">
             <TabsList className="grid w-full grid-cols-4">
@@ -73,6 +156,7 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
               <TabsTrigger value="media">Média</TabsTrigger>
             </TabsList>
 
+            {/* Onglet Général */}
             <TabsContent value="general" className="space-y-4">
               <Card>
                 <CardContent className="p-6 space-y-4">
@@ -81,18 +165,17 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                       <Label htmlFor="name">Nom du produit *</Label>
                       <Input
                         id="name"
-                        value={formData.name}
+                        value={formData.name ?? ''}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         placeholder="Ex: iPhone 15 Pro 128GB"
                         required
                       />
                     </div>
-
                     <div className="space-y-2">
                       <Label htmlFor="sku">Référence (SKU) *</Label>
                       <Input
                         id="sku"
-                        value={formData.sku}
+                        value={formData.sku ?? ''}
                         onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                         placeholder="Ex: IPH15P-128-TIT"
                         required
@@ -105,12 +188,11 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                       <Label htmlFor="barcode">Code-barres</Label>
                       <Input
                         id="barcode"
-                        value={formData.barcode}
-                        onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                        value={formData.barcode ?? ''}
+                        onChange={(e) => setFormData({ ...formData, barcode: e.target.value || null })}
                         placeholder="1234567890123"
                       />
                     </div>
-
                     <div className="space-y-2">
                       <Label htmlFor="category">Catégorie *</Label>
                       <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
@@ -132,8 +214,8 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                     <Label htmlFor="description">Description</Label>
                     <Textarea
                       id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      value={formData.description ?? ''}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value || null })}
                       placeholder="Description détaillée du produit..."
                       rows={3}
                     />
@@ -148,13 +230,14 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                     </div>
                     <Switch
                       checked={formData.active}
-                      onCheckedChange={(checked) => setFormData({ ...formData, active : true })}
+                      onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
                     />
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
+            {/* Onglet Prix */}
             <TabsContent value="pricing" className="space-y-4">
               <Card>
                 <CardContent className="p-6 space-y-4">
@@ -162,7 +245,6 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                     <DollarSign className="w-5 h-5 text-primary" />
                     <h3 className="text-lg font-semibold">Tarification</h3>
                   </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="cost">Prix d&apos;achat (FCFA) *</Label>
@@ -170,21 +252,20 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                         id="cost"
                         type="number"
                         step="0.01"
-                        value={formData.cost}
-                        onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
+                        value={formData.cost || ''}
+                        onChange={(e) => setFormData({ ...formData, cost: e.target.value ? parseFloat(e.target.value) : 0 })}
                         placeholder="899.00"
                         required
                       />
                     </div>
-
                     <div className="space-y-2">
                       <Label htmlFor="price">Prix de vente (FCFA) *</Label>
                       <Input
                         id="price"
                         type="number"
                         step="0.01"
-                        value={formData.price}
-                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                        value={formData.price || ''}
+                        onChange={(e) => setFormData({ ...formData, price: e.target.value ? parseFloat(e.target.value) : 0 })}
                         placeholder="1199.00"
                         required
                       />
@@ -196,13 +277,13 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-sm font-medium">Marge brute:</span>
                         <span className="text-lg font-bold text-green-600">
-                          XAF{(parseFloat(formData.price) - parseFloat(formData.cost)).toFixed(2)}
+                          XAF{(Number(formData.price) - Number(formData.cost)).toFixed(2)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">Marge (%):</span>
                         <span className="text-lg font-bold text-green-600">
-                          {(((parseFloat(formData.price) - parseFloat(formData.cost)) / parseFloat(formData.price)) * 100).toFixed(1)}%
+                          {(((Number(formData.price) - Number(formData.cost)) / Number(formData.price)) * 100).toFixed(1)}%
                         </span>
                       </div>
                     </div>
@@ -211,6 +292,7 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
               </Card>
             </TabsContent>
 
+            {/* Onglet Stock */}
             <TabsContent value="inventory" className="space-y-4">
               <Card>
                 <CardContent className="p-6 space-y-4">
@@ -218,57 +300,52 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                     <Package className="w-5 h-5 text-primary" />
                     <h3 className="text-lg font-semibold">Gestion du stock</h3>
                   </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="stock">Stock actuel</Label>
                       <Input
                         id="stock"
                         type="number"
-                        value={formData.stock}
-                        onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                        value={formData.stock || ''}
+                        onChange={(e) => setFormData({ ...formData, stock: e.target.value ? parseInt(e.target.value) : 0 })}
                         placeholder="45"
                       />
                     </div>
-
                     <div className="space-y-2">
                       <Label htmlFor="minStock">Stock minimum *</Label>
                       <Input
                         id="minStock"
                         type="number"
-                        value={formData.minStock}
-                        onChange={(e) => setFormData({ ...formData, minStock: e.target.value })}
+                        value={formData.minStock || ''}
+                        onChange={(e) => setFormData({ ...formData, minStock: e.target.value ? parseInt(e.target.value) : 0 })}
                         placeholder="20"
                         required
                       />
                     </div>
-
                     <div className="space-y-2">
                       <Label htmlFor="maxStock">Stock maximum</Label>
                       <Input
                         id="maxStock"
                         type="number"
-                        value={formData.maxStock}
-                        onChange={(e) => setFormData({ ...formData, maxStock: e.target.value })}
+                        value={formData.maxStock || ''}
+                        onChange={(e) => setFormData({ ...formData, maxStock: e.target.value ? parseInt(e.target.value) : null })}
                         placeholder="100"
                       />
                     </div>
                   </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="location">Emplacement</Label>
                       <Input
                         id="location"
-                        value={formData.location}
-                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                        value={formData.location ?? ''}
+                        onChange={(e) => setFormData({ ...formData, location: e.target.value || null })}
                         placeholder="Ex: A1-B2-C3"
                       />
                     </div>
-
                     <div className="space-y-2">
                       <Label htmlFor="supplier">Fournisseur principal</Label>
-                      <Select value={formData.supplier} onValueChange={(value) => setFormData({ ...formData, supplier: value })}>
+                      <Select value={formData.supplier ?? ''} onValueChange={(value) => setFormData({ ...formData, supplier: value || null })}>
                         <SelectTrigger>
                           <SelectValue placeholder="Sélectionner un fournisseur" />
                         </SelectTrigger>
@@ -285,6 +362,7 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
               </Card>
             </TabsContent>
 
+            {/* Onglet Média */}
             <TabsContent value="media" className="space-y-4">
               <Card>
                 <CardContent className="p-6 space-y-4">
@@ -293,16 +371,64 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                     <h3 className="text-lg font-semibold">Images du produit</h3>
                   </div>
 
-                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
-                    <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-lg font-medium mb-2">Glissez vos images ici</p>
-                    <p className="text-muted-foreground mb-4">
-                      ou cliquez pour sélectionner des fichiers
-                    </p>
-                    <Button variant="outline">
-                      Parcourir les fichiers
-                    </Button>
+                  {/* Upload zone */}
+                <div className="space-y-4">
+                    <Label>Images du produit</Label>
+
+                    <div className="relative w-full h-48">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={(e) => {
+                          const files = e.target.files;
+                          if (files) {
+                            setFormData((prev) => ({
+                              ...prev,
+                              images: [...prev.images, ...Array.from(files)],
+                            }));
+                          }
+                        }}
+                        className="absolute w-full h-full opacity-0 z-10 cursor-pointer"
+                      />
+
+                      <div className="flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 h-full pointer-events-none select-none">
+                        <Upload className="w-10 h-10 text-muted-foreground mb-2" />
+                        <p className="font-medium">Glissez vos fichiers ici</p>
+                        <p className="text-sm text-muted-foreground">ou cliquez pour importer</p>
+                      </div>
+                    </div>
                   </div>
+
+
+                  {/* Prévisualisation */}
+                  {formData.images.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                      {Array.from(formData.images ?? []).map((file, index) => (
+                        <div key={index} className="relative group">
+                          <Image
+                            src={URL.createObjectURL(file)}
+                            alt={`Aperçu ${index}`}
+                            width={128}
+                            height={128}
+                            className="w-full h-32 object-cover rounded-md"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => {
+                              const newImages = Array.from(formData.images).filter((_, i) => i !== index);
+                              setFormData({ ...formData, images: newImages });
+                            }}
+                          >
+                            <span>X</span>
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   <p className="text-sm text-muted-foreground">
                     Formats acceptés: JPG, PNG, WebP. Taille maximale: 5MB par image.
@@ -312,12 +438,13 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
             </TabsContent>
           </Tabs>
 
+          {/* Boutons d'action */}
           <div className="flex justify-end space-x-4 pt-6 border-t">
             <Button type="button" variant="outline" onClick={onClose}>
               Annuler
             </Button>
-            <Button type="submit">
-              {isEditing ? 'Mettre à jour' : 'Créer le produit'}
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Enregistrement..." : isEditing ? "Mettre à jour" : "Créer le produit"}
             </Button>
           </div>
         </form>
