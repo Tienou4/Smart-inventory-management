@@ -3,6 +3,8 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { useSession } from "next-auth/react";
+import { signOut } from "next-auth/react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +45,12 @@ const viewTitles: Record<ViewType, string> = {
 
 export function Header({ onMenuClick, currentView }: HeaderProps) {
   const { theme, setTheme } = useTheme();
+  const {data: session , status} = useSession();
+   if (!session?.user) {
+      return
+  }
+
+  const {name , email , image} = session.user
 
   return (
     <header className="h-16 border-b bg-card/95 backdrop-blur-xl flex items-center justify-between px-4 md:px-6">
@@ -163,9 +171,9 @@ export function Header({ onMenuClick, currentView }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar className="h-10 w-10">
-                <AvatarImage src="/avatar-placeholder.jpg" alt="User" />
+                <AvatarImage src={image || "/avatar-placeholder.jpg"} alt={name || "User"} />
                 <AvatarFallback className="bg-primary text-primary-foreground">
-                  TU
+                  {name? name.charAt(0).toUpperCase() : "U"}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -173,9 +181,9 @@ export function Header({ onMenuClick, currentView }: HeaderProps) {
           <DropdownMenuContent className="w-56" align="end">
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">Tienou</p>
+                <p className="text-sm font-medium leading-none">{name || "Utilisateur"}</p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  ulrich.tienou@TIENOVA.com
+                    {email}
                 </p>
               </div>
             </DropdownMenuLabel>
@@ -189,7 +197,7 @@ export function Header({ onMenuClick, currentView }: HeaderProps) {
               Paramètres
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={()=>signOut({callbackUrl: "/sign-in"})}>
               <LogOut className="mr-2 h-4 w-4" />
               Déconnexion
             </DropdownMenuItem>
