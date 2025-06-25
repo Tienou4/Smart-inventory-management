@@ -1,6 +1,6 @@
 "use client";
 import React from 'react'; 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -39,102 +39,161 @@ type ProductFormValues = z.infer<typeof productSchema>;
 export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) {
   const router = useRouter();
   const [formData, setFormData] = useState<ProductFormValues>({
-    name: product?.name || "",
-    sku: product?.sku || "",
-    category: product?.category || "",
-    price: product?.price || 0,
-    cost: product?.cost || 0,
-    stock: product?.stock || 0,
-    minStock: product?.minStock || 0,
-    maxStock: product?.maxStock || null,
-    barcode: product?.barcode || null,
-    description: product?.description || null,
-    location: product?.location || null,
-    supplier: product?.supplier || null,
-    active: product?.status === 'active' || false,
+    name: "",
+    sku: "",
+    category: "",
+    price: 0,
+    cost: 0,
+    stock: 0,
+    minStock: 0,
+    maxStock: null,
+    barcode: null,
+    description: null,
+    location: null,
+    supplier: null,
+    active: true,
     images: [],
   });
 
   const isEditing = !!product;
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  // Réinitialiser le formulaire quand le produit change
+  useEffect(() => {
+    if (product) {
+      setFormData({
+        name: product.name || "",
+        sku: product.sku || "",
+        category: product.category || "",
+        price: product.price || 0,
+        cost: product.cost || 0,
+        stock: product.stock || 0,
+        minStock: product.minStock || 0,
+        maxStock: product.maxStock || null,
+        barcode: product.barcode || null,
+        description: product.description || null,
+        location: product.location || null,
+        supplier: product.supplier || null,
+        active: product.status === 'ACTIVE',
+        images: [],
+      });
+    } else {
+      // Réinitialiser pour un nouveau produit
+      setFormData({
+        name: "",
+        sku: "",
+        category: "",
+        price: 0,
+        cost: 0,
+        stock: 0,
+        minStock: 0,
+        maxStock: null,
+        barcode: null,
+        description: null,
+        location: null,
+        supplier: null,
+        active: true,
+        images: [],
+      });
+    }
+  }, [product, isOpen]);
 
-    try {
-      // Convertir les données en type approprié
-      const parsedData = {
-        name: formData.name,
-        sku: formData.sku,
-        category: formData.category,
-        price: typeof formData.price === 'string' ? parseFloat(formData.price) || 0 : formData.price,
-        cost: typeof formData.cost === 'string' ? parseFloat(formData.cost) || 0 : formData.cost,
-        stock: typeof formData.stock === 'string' ? parseInt(formData.stock) || 0 : formData.stock,
-        minStock: typeof formData.minStock === 'string' ? parseInt(formData.minStock) || 0 : formData.minStock,
-        maxStock: formData.maxStock ? (typeof formData.maxStock === 'string' ? parseInt(formData.maxStock) : formData.maxStock) : null,
-        barcode: formData.barcode || null,
-        description: formData.description || null,
-        location: formData.location || null,
-        supplier: formData.supplier || null,
-        active: formData.active,
-      };
+// Dans handleSubmit, ajoutez cette partie pour de meilleurs logs d'erreur
 
-      // Valider avec Zod
-      const validated = productSchema.parse(parsedData);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
 
-      // Envoyer les données via fetch
-      const url = isEditing ? `/api/products?id=${product?.id}` : "/api/products";
-      const method = isEditing ? "PUT" : "POST";
+  try {
+    const parsedData = {
+      name: formData.name.trim(),
+      sku: formData.sku.trim(),
+      category: formData.category || "",
+      price: typeof formData.price === 'string' ? parseFloat(formData.price) : formData.price,
+      cost: typeof formData.cost === 'string' ? parseFloat(formData.cost) : formData.cost,
+      stock: typeof formData.stock === 'string' ? parseInt(formData.stock) : formData.stock,
+      minStock: typeof formData.minStock === 'string' ? parseInt(formData.minStock) : formData.minStock,
+      maxStock: formData.maxStock ? parseInt(formData.maxStock.toString()) : null,
+      barcode: formData.barcode?.trim() || null,
+      description: formData.description?.trim() || null,
+      location: formData.location?.trim() || null,
+      supplier: formData.supplier?.trim() || null,
+      active: Boolean(formData.active),
+      images: formData.images || [],
+    };
 
-      const body = new FormData();
+    console.log("📝 Données à valider:", parsedData);
+    console.log("📸 Nombre d'images à envoyer:", parsedData.images.length);
 
-      body.append("name", validated.name);
-      body.append("sku", validated.sku);
-      body.append("category", validated.category);
-      body.append("price", validated.price.toString());
-      body.append("cost", validated.cost.toString());
-      body.append("stock", validated.stock.toString());
-      body.append("minStock", validated.minStock.toString());
+    const validated = productSchema.parse(parsedData);
+
+    const url = isEditing ? `/api/products?id=${product?.id}` : "/api/products";
+    const method = isEditing ? "PUT" : "POST";
+
+    const body = new FormData();
+
+    // Ajouter les données du produit
+    body.append("name", validated.name);
+    body.append("sku", validated.sku);
+    body.append("category", validated.category);
+    body.append("price", validated.price.toString());
+    body.append("cost", validated.cost.toString());
+    body.append("stock", validated.stock.toString());
+    body.append("minStock", validated.minStock.toString());
 
     if (validated.maxStock !== null && validated.maxStock !== undefined) {
-          body.append("maxStock", validated.maxStock.toString());
-      } else {
-        body.append("maxStock", "");
-      }
+      body.append("maxStock", validated.maxStock.toString());
+    }
 
-      body.append("barcode", validated.barcode || "");
-      body.append("description", validated.description || "");
-      body.append("location", validated.location || "");
-      body.append("supplier", validated.supplier || "");
-      body.append("active", validated.active ? "true" : "false");
+    if (validated.barcode) body.append("barcode", validated.barcode);
+    if (validated.description) body.append("description", validated.description);
+    if (validated.location) body.append("location", validated.location);
+    if (validated.supplier) body.append("supplier", validated.supplier);
 
-      // Ajout des images
-      formData.images.forEach((file) => {
+    body.append("active", validated.active ? "true" : "false");
+
+    // Ajouter les images avec logs
+    if (formData.images && formData.images.length > 0) {
+      console.log("📸 Ajout des images au FormData...");
+      Array.from(formData.images).forEach((file, index) => {
+        console.log(`📸 Image ${index + 1}: ${file.name}, taille: ${file.size}`);
         body.append("images", file);
       });
-
-      const response = await fetch(url, { method, body });
-
-      if (!response.ok) throw new Error("Erreur lors de la sauvegarde");
-
-      const result = await response.json();
-      console.log("✅ Produit sauvegardé :", result);
-
-      onClose();
-      router.refresh();
-
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const errorMessage = error.errors.map(e => `${e.path.join('.')} : ${e.message}`).join(", ");
-        alert(`Données invalides : ${errorMessage}`);
-      } else {
-        alert(`Échec de la soumission : ${(error as Error).message}`);
-      }
-    } finally {
-      setIsLoading(false);
+    } else {
+      console.log("📸 Aucune image à envoyer");
     }
-  };
+
+    // Faire la requête
+    console.log(`🚀 Envoi de la requête ${method} vers ${url}`);
+    const response = await fetch(url, { method, body });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ Erreur de la réponse:", errorText);
+      throw new Error(`Échec de la sauvegarde: ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log("✅ Produit sauvegardé avec succès:", result);
+
+    // Afficher un message de succès
+    alert(`Produit ${isEditing ? 'modifié' : 'créé'} avec succès!`);
+
+    onClose();
+    router.refresh();
+  } catch (error) {
+    console.error("❌ Erreur lors de la soumission:", error);
+
+    if (error instanceof z.ZodError) {
+      const errorMessage = error.errors.map(e => `${e.path.join('.')} : ${e.message}`).join(', ');
+      alert(`Données invalides : ${errorMessage}`);
+    } else {
+      alert(`Échec de la soumission : ${(error as Error).message}`);
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -165,7 +224,7 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                       <Label htmlFor="name">Nom du produit *</Label>
                       <Input
                         id="name"
-                        value={formData.name ?? ''}
+                        value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         placeholder="Ex: iPhone 15 Pro 128GB"
                         required
@@ -175,7 +234,7 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                       <Label htmlFor="sku">Référence (SKU) *</Label>
                       <Input
                         id="sku"
-                        value={formData.sku ?? ''}
+                        value={formData.sku}
                         onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                         placeholder="Ex: IPH15P-128-TIT"
                         required
@@ -188,7 +247,7 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                       <Label htmlFor="barcode">Code-barres</Label>
                       <Input
                         id="barcode"
-                        value={formData.barcode ?? ''}
+                        value={formData.barcode || ''}
                         onChange={(e) => setFormData({ ...formData, barcode: e.target.value || null })}
                         placeholder="1234567890123"
                       />
@@ -214,7 +273,7 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                     <Label htmlFor="description">Description</Label>
                     <Textarea
                       id="description"
-                      value={formData.description ?? ''}
+                      value={formData.description || ''}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value || null })}
                       placeholder="Description détaillée du produit..."
                       rows={3}
@@ -252,8 +311,8 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                         id="cost"
                         type="number"
                         step="0.01"
-                        value={formData.cost || ''}
-                        onChange={(e) => setFormData({ ...formData, cost: e.target.value ? parseFloat(e.target.value) : 0 })}
+                        value={formData.cost}
+                        onChange={(e) => setFormData({ ...formData, cost: parseFloat(e.target.value) || 0 })}
                         placeholder="899.00"
                         required
                       />
@@ -264,26 +323,26 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                         id="price"
                         type="number"
                         step="0.01"
-                        value={formData.price || ''}
-                        onChange={(e) => setFormData({ ...formData, price: e.target.value ? parseFloat(e.target.value) : 0 })}
+                        value={formData.price}
+                        onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
                         placeholder="1199.00"
                         required
                       />
                     </div>
                   </div>
 
-                  {formData.cost && formData.price && (
+                  {formData.cost > 0 && formData.price > 0 && (
                     <div className="p-4 bg-muted/50 rounded-lg">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-sm font-medium">Marge brute:</span>
                         <span className="text-lg font-bold text-green-600">
-                          XAF{(Number(formData.price) - Number(formData.cost)).toFixed(2)}
+                          XAF{(formData.price - formData.cost).toFixed(2)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">Marge (%):</span>
                         <span className="text-lg font-bold text-green-600">
-                          {(((Number(formData.price) - Number(formData.cost)) / Number(formData.price)) * 100).toFixed(1)}%
+                          {(((formData.price - formData.cost) / formData.price) * 100).toFixed(1)}%
                         </span>
                       </div>
                     </div>
@@ -306,8 +365,8 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                       <Input
                         id="stock"
                         type="number"
-                        value={formData.stock || ''}
-                        onChange={(e) => setFormData({ ...formData, stock: e.target.value ? parseInt(e.target.value) : 0 })}
+                        value={formData.stock}
+                        onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
                         placeholder="45"
                       />
                     </div>
@@ -316,8 +375,8 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                       <Input
                         id="minStock"
                         type="number"
-                        value={formData.minStock || ''}
-                        onChange={(e) => setFormData({ ...formData, minStock: e.target.value ? parseInt(e.target.value) : 0 })}
+                        value={formData.minStock}
+                        onChange={(e) => setFormData({ ...formData, minStock: parseInt(e.target.value) || 0 })}
                         placeholder="20"
                         required
                       />
@@ -338,14 +397,14 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                       <Label htmlFor="location">Emplacement</Label>
                       <Input
                         id="location"
-                        value={formData.location ?? ''}
+                        value={formData.location || ''}
                         onChange={(e) => setFormData({ ...formData, location: e.target.value || null })}
                         placeholder="Ex: A1-B2-C3"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="supplier">Fournisseur principal</Label>
-                      <Select value={formData.supplier ?? ''} onValueChange={(value) => setFormData({ ...formData, supplier: value || null })}>
+                      <Select value={formData.supplier || ''} onValueChange={(value) => setFormData({ ...formData, supplier: value || null })}>
                         <SelectTrigger>
                           <SelectValue placeholder="Sélectionner un fournisseur" />
                         </SelectTrigger>
@@ -371,9 +430,34 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                     <h3 className="text-lg font-semibold">Images du produit</h3>
                   </div>
 
+                  {/* Images existantes pour modification */}
+                  {isEditing && product?.images && product.images.length > 0 && (
+                    <div className="mb-4">
+                      <Label className="text-sm font-medium mb-2 block">Images actuelles</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {product.images.map((image: any, index: number) => (
+                          <div key={image.id} className="relative">
+                            <Image
+                              src={image.url}
+                              alt={`Image ${index + 1}`}
+                              width={128}
+                              height={128}
+                              className="w-full h-32 object-cover rounded-md"
+                            />
+                            {image.isMain && (
+                              <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
+                                Principal
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Upload zone */}
-                <div className="space-y-4">
-                    <Label>Images du produit</Label>
+                  <div className="space-y-4">
+                    <Label>Nouvelles images</Label>
 
                     <div className="relative w-full h-48">
                       <input
@@ -400,11 +484,10 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
                     </div>
                   </div>
 
-
-                  {/* Prévisualisation */}
+                  {/* Prévisualisation des nouvelles images */}
                   {formData.images.length > 0 && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                      {Array.from(formData.images ?? []).map((file, index) => (
+                      {Array.from(formData.images).map((file, index) => (
                         <div key={index} className="relative group">
                           <Image
                             src={URL.createObjectURL(file)}

@@ -14,9 +14,66 @@ import { Plus, Search, Filter, Download, Upload } from 'lucide-react';
 
 interface ProductsHeaderProps {
   onAddProduct: () => void;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  categoryFilter: string;
+  onCategoryChange: (category: string) => void;
+  stockFilter: string;
+  onStockChange: (stock: string) => void;
 }
 
-export function ProductsHeader({ onAddProduct }: ProductsHeaderProps) {
+export function ProductsHeader({ 
+  onAddProduct,
+  searchQuery,
+  onSearchChange,
+  categoryFilter,
+  onCategoryChange,
+  stockFilter,
+  onStockChange
+}: ProductsHeaderProps) {
+  
+  // Fonction pour exporter les données
+  const handleExport = async () => {
+    try {
+      const response = await fetch('/api/products');
+      if (!response.ok) throw new Error('Erreur lors de l\'export');
+      
+      const products = await response.json();
+      
+      // Créer un fichier CSV simple
+      const csvContent = [
+        // En-têtes
+        ['Nom', 'SKU', 'Catégorie', 'Prix', 'Coût', 'Stock', 'Stock Min', 'Fournisseur', 'Statut'].join(','),
+        // Données
+        ...products.map((product: any) => [
+          `"${product.name}"`,
+          product.sku,
+          product.category,
+          product.price,
+          product.cost,
+          product.stock,
+          product.minStock,
+          `"${product.supplier || ''}"`,
+          product.status
+        ].join(','))
+      ].join('\n');
+
+      // Télécharger le fichier
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `produits_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Erreur lors de l\'export:', error);
+      alert('Erreur lors de l\'export des données');
+    }
+  };
+
   return (
     <Card className="glass-morphism border-0 shadow-lg">
       <CardContent className="p-6">
@@ -33,7 +90,7 @@ export function ProductsHeader({ onAddProduct }: ProductsHeaderProps) {
               <Upload className="w-4 h-4 mr-2" />
               Importer
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="w-4 h-4 mr-2" />
               Exporter
             </Button>
@@ -50,11 +107,13 @@ export function ProductsHeader({ onAddProduct }: ProductsHeaderProps) {
             <Input
               placeholder="Rechercher par nom, référence, code-barres..."
               className="pl-10"
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
             />
           </div>
           
           <div className="flex gap-2">
-            <Select>
+            <Select value={categoryFilter} onValueChange={onCategoryChange}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Catégorie" />
               </SelectTrigger>
@@ -68,7 +127,7 @@ export function ProductsHeader({ onAddProduct }: ProductsHeaderProps) {
               </SelectContent>
             </Select>
             
-            <Select>
+            <Select value={stockFilter} onValueChange={onStockChange}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Stock" />
               </SelectTrigger>
