@@ -32,7 +32,6 @@ export function ProductsHeader({
   onStockChange
 }: ProductsHeaderProps) {
   
-  // Fonction pour exporter les données
   const handleExport = async () => {
     try {
       const response = await fetch('/api/products');
@@ -40,11 +39,8 @@ export function ProductsHeader({
       
       const products = await response.json();
       
-      // Créer un fichier CSV simple
       const csvContent = [
-        // En-têtes
         ['Nom', 'SKU', 'Catégorie', 'Prix', 'Coût', 'Stock', 'Stock Min', 'Fournisseur', 'Statut'].join(','),
-        // Données
         ...products.map((product: any) => [
           `"${product.name}"`,
           product.sku,
@@ -85,15 +81,7 @@ export function ProductsHeader({
             </p>
           </div>
           
-          <div className="flex items-center space-x-3">
-            <Button variant="outline" size="sm">
-              <Upload className="w-4 h-4 mr-2" />
-              Importer
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleExport}>
-              <Download className="w-4 h-4 mr-2" />
-              Exporter
-            </Button>
+          <div className="flex items-center space-x-1">
             <Button onClick={onAddProduct} size="sm">
               <Plus className="w-4 h-4 mr-2" />
               Nouveau Produit

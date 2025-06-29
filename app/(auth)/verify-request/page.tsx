@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, RefreshCw, ArrowLeft, CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -67,131 +67,133 @@ export default function VerifyRequestPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      <div className="w-full max-w-md space-y-6">
-        {status === "waiting" && (
-          <Card className="shadow-xl border-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
-            <CardHeader className="text-center space-y-4">
-              <div className="mx-auto w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                <Mail className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div className="space-y-2">
-                <CardTitle className="text-2xl font-bold">Vérifiez votre email</CardTitle>
-                <CardDescription className="text-base">
-                  Un lien de connexion sécurisé a été envoyé à votre adresse email
-                </CardDescription>
-              </div>
-              
-              <Badge variant="secondary" className="mx-auto">
-                <Clock className="w-3 h-3 mr-1" />
-                Expire dans {formatTime(timeLeft)}
-              </Badge>
-            </CardHeader>
-            
-            <CardContent className="space-y-6">
-              <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
-                <AlertTriangle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <AlertDescription className="text-blue-700 dark:text-blue-300">
-                  <strong className="block mb-2">Instructions :</strong>
-                  <ul className="space-y-1 text-sm">
-                    <li>• Cliquez sur le lien dans votre email</li>
-                    <li>• Vérifiez votre dossier spam si nécessaire</li>
-                    <li>• Le lien vous connectera automatiquement</li>
-                  </ul>
-                </AlertDescription>
-              </Alert>
-
-              <div className="flex flex-col space-y-3">
-                <Button
-                  onClick={() => window.location.reload()}
-                  variant="default"
-                  className="w-full"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Actualiser la page
-                </Button>
+    <Suspense fallback= {<Loader/>}>
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+        <div className="w-full max-w-md space-y-6">
+          {status === "waiting" && (
+            <Card className="shadow-xl border-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+              <CardHeader className="text-center space-y-4">
+                <div className="mx-auto w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                  <Mail className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="space-y-2">
+                  <CardTitle className="text-2xl font-bold">Vérifiez votre email</CardTitle>
+                  <CardDescription className="text-base">
+                    Un lien de connexion sécurisé a été envoyé à votre adresse email
+                  </CardDescription>
+                </div>
                 
+                <Badge variant="secondary" className="mx-auto">
+                  <Clock className="w-3 h-3 mr-1" />
+                  Expire dans {formatTime(timeLeft)}
+                </Badge>
+              </CardHeader>
+              
+              <CardContent className="space-y-6">
+                <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
+                  <AlertTriangle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <AlertDescription className="text-blue-700 dark:text-blue-300">
+                    <strong className="block mb-2">Instructions :</strong>
+                    <ul className="space-y-1 text-sm">
+                      <li>• Cliquez sur le lien dans votre email</li>
+                      <li>• Vérifiez votre dossier spam si nécessaire</li>
+                      <li>• Le lien vous connectera automatiquement</li>
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+
+                <div className="flex flex-col space-y-3">
+                  <Button
+                    onClick={() => window.location.reload()}
+                    variant="default"
+                    className="w-full"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Actualiser la page
+                  </Button>
+                  
+                  <Button
+                    onClick={() => router.push("/sign-in")}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Retour à la connexion
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {status === "success" && (
+            <Card className="shadow-xl border-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+              <CardHeader className="text-center space-y-4">
+                <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+                </div>
+                <div className="space-y-2">
+                  <CardTitle className="text-2xl font-bold text-green-700 dark:text-green-300">
+                    Email vérifié !
+                  </CardTitle>
+                  <CardDescription>
+                    Connexion réussie, redirection en cours...
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="text-center">
+                <div className="flex items-center justify-center space-x-2">
+                  <Loader />
+                  <span className="text-sm text-muted-foreground">
+                    Redirection vers votre tableau de bord
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {status === "error" && (
+            <Card className="shadow-xl border-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+              <CardHeader className="text-center space-y-4">
+                <div className="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                  <XCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+                </div>
+                <div className="space-y-2">
+                  <CardTitle className="text-2xl font-bold text-red-700 dark:text-red-300">
+                    Erreur de vérification
+                  </CardTitle>
+                  <CardDescription>
+                    Le lien de vérification est invalide ou a expiré
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="space-y-4">
+                <Alert variant="destructive" className="border-red-200 bg-red-50 dark:bg-red-900/20">
+                  <XCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Veuillez demander un nouveau lien de connexion pour continuer.
+                  </AlertDescription>
+                </Alert>
+
                 <Button
                   onClick={() => router.push("/sign-in")}
-                  variant="outline"
                   className="w-full"
+                  variant="default"
                 >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Retour à la connexion
+                  <Mail className="w-4 h-4 mr-2" />
+                  Demander un nouveau lien
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
+          )}
 
-        {status === "success" && (
-          <Card className="shadow-xl border-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
-            <CardHeader className="text-center space-y-4">
-              <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
-              </div>
-              <div className="space-y-2">
-                <CardTitle className="text-2xl font-bold text-green-700 dark:text-green-300">
-                  Email vérifié !
-                </CardTitle>
-                <CardDescription>
-                  Connexion réussie, redirection en cours...
-                </CardDescription>
-              </div>
-            </CardHeader>
-            
-            <CardContent className="text-center">
-              <div className="flex items-center justify-center space-x-2">
-                <Loader />
-                <span className="text-sm text-muted-foreground">
-                  Redirection vers votre tableau de bord
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {status === "error" && (
-          <Card className="shadow-xl border-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
-            <CardHeader className="text-center space-y-4">
-              <div className="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                <XCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
-              </div>
-              <div className="space-y-2">
-                <CardTitle className="text-2xl font-bold text-red-700 dark:text-red-300">
-                  Erreur de vérification
-                </CardTitle>
-                <CardDescription>
-                  Le lien de vérification est invalide ou a expiré
-                </CardDescription>
-              </div>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              <Alert variant="destructive" className="border-red-200 bg-red-50 dark:bg-red-900/20">
-                <XCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Veuillez demander un nouveau lien de connexion pour continuer.
-                </AlertDescription>
-              </Alert>
-
-              <Button
-                onClick={() => router.push("/sign-in")}
-                className="w-full"
-                variant="default"
-              >
-                <Mail className="w-4 h-4 mr-2" />
-                Demander un nouveau lien
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Footer */}
-        <div className="text-center text-xs text-muted-foreground">
-          <p>Connexion sécurisée • Lien à usage unique</p>
+          {/* Footer */}
+          <div className="text-center text-xs text-muted-foreground">
+            <p>Connexion sécurisée • Lien à usage unique</p>
+          </div>
         </div>
       </div>
-    </div>
+    </Suspense>
   );
 }

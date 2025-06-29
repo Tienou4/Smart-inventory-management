@@ -17,10 +17,8 @@ import {
 import { Separator } from '@/components/ui/separator';
 import {
   User,
-  Building,
   Bell,
   Shield,
-  Database,
   Palette,
   Mail,
   Smartphone,
@@ -29,12 +27,10 @@ import {
 export function SettingsTabs() {
   return (
     <Tabs defaultValue="general" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-6">
+      <TabsList className="grid w-full grid-cols-4">
         <TabsTrigger value="general">Général</TabsTrigger>
-        <TabsTrigger value="company">Entreprise</TabsTrigger>
         <TabsTrigger value="notifications">Notifications</TabsTrigger>
         <TabsTrigger value="security">Sécurité</TabsTrigger>
-        <TabsTrigger value="integrations">Intégrations</TabsTrigger>
         <TabsTrigger value="appearance">Apparence</TabsTrigger>
       </TabsList>
 
@@ -60,12 +56,12 @@ export function SettingsTabs() {
             
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" defaultValue="jean.dupont@entreprise.com" />
+              <Input id="email" type="email" defaultValue="tienouulrich@tienova.com" />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="phone">Téléphone</Label>
-              <Input id="phone" defaultValue="+33 1 23 45 67 89" />
+              <Input id="phone" defaultValue="+237694738547" />
             </div>
             
             <div className="space-y-2">
@@ -76,24 +72,22 @@ export function SettingsTabs() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="fr">Français</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="es">Español</SelectItem>
-                  <SelectItem value="de">Deutsch</SelectItem>
+                  <SelectItem value="en">Englais</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="timezone">Fuseau horaire</Label>
-              <Select defaultValue="europe/paris">
+              <Label htmlFor="timezone">Ville</Label>
+              <Select defaultValue="Bandjoun">
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="europe/paris">Europe/Paris</SelectItem>
-                  <SelectItem value="europe/london">Europe/London</SelectItem>
-                  <SelectItem value="america/new_york">America/New_York</SelectItem>
-                  <SelectItem value="asia/tokyo">Asia/Tokyo</SelectItem>
+                  <SelectItem value="Bandjoun">Bandjoun</SelectItem>
+                  <SelectItem value="Douala">Douala</SelectItem>
+                  <SelectItem value="Yaounde">Yaounde</SelectItem>
+                  <SelectItem value="Bafoussam">Bafoussam</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -103,51 +97,6 @@ export function SettingsTabs() {
         </Card>
       </TabsContent>
 
-      <TabsContent value="company" className="space-y-6">
-        <Card className="glass-morphism border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Building className="w-5 h-5" />
-              <span>Informations Entreprise</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="companyName">Nom de l'entreprise</Label>
-              <Input id="companyName" defaultValue="Mon Entreprise SARL" />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="siret">SIRET</Label>
-                <Input id="siret" defaultValue="12345678901234" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="vatNumber">Numéro TVA</Label>
-                <Input id="vatNumber" defaultValue="FR12345678901" />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="address">Adresse</Label>
-              <Textarea id="address" defaultValue="123 Rue du Commerce&#10;75001 Paris&#10;France" />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone">Téléphone</Label>
-                <Input id="phone" defaultValue="+33 1 23 45 67 89" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="website">Site web</Label>
-                <Input id="website" defaultValue="https://www.monentreprise.fr" />
-              </div>
-            </div>
-            
-            <Button>Mettre à jour</Button>
-          </CardContent>
-        </Card>
-      </TabsContent>
 
       <TabsContent value="notifications" className="space-y-6">
         <Card className="glass-morphism border-0 shadow-lg">
@@ -179,7 +128,7 @@ export function SettingsTabs() {
                   <div>
                     <p className="font-medium">Nouvelles commandes</p>
                     <p className="text-sm text-muted-foreground">
-                      Notification lors de la réception d'une nouvelle commande
+                      Notification lors de la réception d&apos;une nouvelle commande
                     </p>
                   </div>
                   <Switch defaultChecked />
@@ -283,7 +232,7 @@ export function SettingsTabs() {
                   <div>
                     <p className="font-medium">Session actuelle</p>
                     <p className="text-sm text-muted-foreground">
-                      Chrome sur Windows • Paris, France
+                      Chrome sur Windows • Douala, Cameroun
                     </p>
                   </div>
                   <span className="text-sm text-green-600">Actif</span>
@@ -303,63 +252,6 @@ export function SettingsTabs() {
         </Card>
       </TabsContent>
 
-      <TabsContent value="integrations" className="space-y-6">
-        <Card className="glass-morphism border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Database className="w-5 h-5" />
-              <span>Intégrations</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium">Comptabilité</h4>
-                  <Switch />
-                </div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Synchronisez vos données avec votre logiciel de comptabilité
-                </p>
-                <Button variant="outline" size="sm">Configurer</Button>
-              </div>
-              
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium">E-commerce</h4>
-                  <Switch />
-                </div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Connectez votre boutique en ligne pour synchroniser les stocks
-                </p>
-                <Button variant="outline" size="sm">Configurer</Button>
-              </div>
-              
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium">Scanner codes-barres</h4>
-                  <Switch defaultChecked />
-                </div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Utilisez votre smartphone pour scanner les codes-barres
-                </p>
-                <Button variant="outline" size="sm">Tester</Button>
-              </div>
-              
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium">API externe</h4>
-                  <Switch />
-                </div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Intégrez avec vos systèmes existants via notre API
-                </p>
-                <Button variant="outline" size="sm">Documentation</Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
 
       <TabsContent value="appearance" className="space-y-6">
         <Card className="glass-morphism border-0 shadow-lg">
@@ -391,7 +283,7 @@ export function SettingsTabs() {
             <Separator />
             
             <div className="space-y-4">
-              <h4 className="font-medium">Couleur d'accent</h4>
+              <h4 className="font-medium">Couleur d&apos;accent</h4>
               <div className="flex space-x-2">
                 <div className="w-8 h-8 bg-blue-500 rounded-full cursor-pointer ring-2 ring-blue-500 ring-offset-2"></div>
                 <div className="w-8 h-8 bg-green-500 rounded-full cursor-pointer"></div>
@@ -404,7 +296,7 @@ export function SettingsTabs() {
             <Separator />
             
             <div className="space-y-4">
-              <h4 className="font-medium">Préférences d'affichage</h4>
+              <h4 className="font-medium">Préférences d&apos;affichage</h4>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -430,7 +322,7 @@ export function SettingsTabs() {
                   <div>
                     <p className="font-medium">Mode haute densité</p>
                     <p className="text-sm text-muted-foreground">
-                      Afficher plus d'informations par écran
+                      Afficher plus d&apos;informations par écran
                     </p>
                   </div>
                   <Switch />

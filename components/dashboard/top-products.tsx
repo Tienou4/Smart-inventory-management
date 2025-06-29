@@ -96,7 +96,7 @@ export function TopProducts() {
                     <p className="text-xs text-muted-foreground">{product.category}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold">€{product.revenue.toLocaleString()}</p>
+                    <p className="text-sm font-semibold">{product.revenue.toLocaleString()}FCFA</p>
                     <Badge variant="secondary" className="text-xs">
                       {product.trend}
                     </Badge>

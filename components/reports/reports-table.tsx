@@ -125,10 +125,10 @@ export function ReportsTable() {
                   </TableCell>
                   <TableCell className="font-medium">{item.ventes}</TableCell>
                   <TableCell className="font-medium">
-                    €{item.revenue.toLocaleString()}
+                    {item.revenue.toLocaleString()}FCFA
                   </TableCell>
                   <TableCell className="font-medium text-green-600">
-                    €{item.profit.toLocaleString()}
+                    {item.profit.toLocaleString()}FCFA
                   </TableCell>
                   <TableCell>
                     <Badge variant={item.rotation > 4 ? 'default' : 'secondary'}>

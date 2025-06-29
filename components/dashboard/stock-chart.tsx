@@ -69,9 +69,9 @@ export function StockChart() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                   <XAxis dataKey="month" />
-                  <YAxis tickFormatter={(value) => `€${value / 1000}K`} />
+                  <YAxis tickFormatter={(value) => `${value / 1000}K`} />
                   <Tooltip
-                    formatter={(value: number) => [`€${value.toLocaleString()}`, 'Valeur']}
+                    formatter={(value: number) => [`${value.toLocaleString()}FCFA`, 'Valeur']}
                     labelStyle={{ color: 'hsl(var(--foreground))' }}
                     contentStyle={{
                       backgroundColor: 'hsl(var(--background))',

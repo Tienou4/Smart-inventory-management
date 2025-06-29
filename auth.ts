@@ -1,3 +1,4 @@
+// auth.ts
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { PrismaClient, Role } from "@prisma/client";
@@ -39,6 +40,10 @@ export const {
   },
   callbacks: {
     async signIn({ user, account, profile, credentials }) {
+      // Autoriser la connexion dev en local
+      if (account?.provider === "dev-login" && process.env.NODE_ENV === "development") {
+        return true;
+      }
       if (account?.provider === "resend") return true;
       if (account?.provider !== "credentials") return true;
       return true;
@@ -61,6 +66,13 @@ export const {
       if (user) {
         console.log("JWT callback - user:", user.email);
       }
+      
+      // Gestion spéciale pour le mode développement
+      if (account?.provider === "dev-login" && process.env.NODE_ENV === "development") {
+        token.role = "USER";
+        return token;
+      }
+      
       if (!token.sub) return token;
 
       const dbUser = await db.user.findUnique({
@@ -73,17 +85,23 @@ export const {
       return token;
     }
   },
-  adapter: PrismaAdapter(db),
+  // Adapter conditionnel selon l'environnement
+  ...(process.env.NODE_ENV === "production" ? {
+    adapter: PrismaAdapter(db)
+  } : {}),
+  
   session: { 
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 jours
   },
   providers: [
-    // Configuration simplifiée - laissez NextAuth gérer l'envoi
-    Resend({
-      apiKey: process.env.RESEND_API_KEY,
-      from: "tienova@prepa3il-1a.online",
-    }),
+    // Resend uniquement en production
+    ...(process.env.NODE_ENV === "production" ? [
+      Resend({
+        apiKey: process.env.RESEND_API_KEY,
+        from: "tienova@prepa3il-1a.online",
+      })
+    ] : []),
     ...authConfig.providers,
   ],
   debug: process.env.NODE_ENV === "development",

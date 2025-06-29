@@ -176,7 +176,6 @@ const handleSubmit = async (e: React.FormEvent) => {
     const result = await response.json();
     console.log("✅ Produit sauvegardé avec succès:", result);
 
-    // Afficher un message de succès
     alert(`Produit ${isEditing ? 'modifié' : 'créé'} avec succès!`);
 
     onClose();
@@ -312,7 +311,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                         type="number"
                         step="0.01"
                         value={formData.cost}
-                        onChange={(e) => setFormData({ ...formData, cost: parseFloat(e.target.value) || 0 })}
+                        onChange={(e) => setFormData({ ...formData, cost:  e.target.value? parseFloat(e.target.value) : 0 })}
                         placeholder="899.00"
                         required
                       />
@@ -323,8 +322,8 @@ const handleSubmit = async (e: React.FormEvent) => {
                         id="price"
                         type="number"
                         step="0.01"
-                        value={formData.price}
-                        onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                        value={formData.price || ''}
+                        onChange={(e) => setFormData({ ...formData, price: e.target.value? parseFloat(e.target.value) : 0 })}
                         placeholder="1199.00"
                         required
                       />
@@ -365,7 +364,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                       <Input
                         id="stock"
                         type="number"
-                        value={formData.stock}
+                        value={formData.stock || ''}
                         onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
                         placeholder="45"
                       />
@@ -375,7 +374,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                       <Input
                         id="minStock"
                         type="number"
-                        value={formData.minStock}
+                        value={formData.minStock || ''}
                         onChange={(e) => setFormData({ ...formData, minStock: parseInt(e.target.value) || 0 })}
                         placeholder="20"
                         required

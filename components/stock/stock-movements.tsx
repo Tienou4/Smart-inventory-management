@@ -147,7 +147,7 @@ export function StockMovements() {
                 <SelectValue placeholder="Période" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="today">Aujourd'hui</SelectItem>
+                <SelectItem value="today">Aujourd&apos;hui</SelectItem>
                 <SelectItem value="week">Cette semaine</SelectItem>
                 <SelectItem value="month">Ce mois</SelectItem>
                 <SelectItem value="custom">Personnalisé</SelectItem>

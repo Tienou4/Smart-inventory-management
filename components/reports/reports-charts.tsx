@@ -79,9 +79,9 @@ export function ReportsCharts() {
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                       <XAxis dataKey="month" />
-                      <YAxis tickFormatter={(value) => `XAF${value / 1000}K`} />
+                      <YAxis tickFormatter={(value) => `${value / 1000}k`} />
                       <Tooltip
-                        formatter={(value: number) => [`XAF${value.toLocaleString()}`, 'Ventes']}
+                        formatter={(value: number) => [`${value.toLocaleString()}FCFA`, 'Ventes']}
                         labelStyle={{ color: 'hsl(var(--foreground))' }}
                         contentStyle={{
                           backgroundColor: 'hsl(var(--background))',
@@ -129,9 +129,9 @@ export function ReportsCharts() {
                     <LineChart data={salesData}>
                       <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                       <XAxis dataKey="month" />
-                      <YAxis tickFormatter={(value) => `€${value / 1000}K`} />
+                      <YAxis tickFormatter={(value) => `${value / 1000}K`} />
                       <Tooltip
-                        formatter={(value: number) => [`€${value.toLocaleString()}`, 'Profit']}
+                        formatter={(value: number) => [`${value.toLocaleString()}FCFA`, 'Profit']}
                         labelStyle={{ color: 'hsl(var(--foreground))' }}
                         contentStyle={{
                           backgroundColor: 'hsl(var(--background))',
@@ -155,7 +155,6 @@ export function ReportsCharts() {
         </Card>
       </div>
 
-      {/* Side Charts */}
       <div className="space-y-6">
         {/* Category Distribution */}
         <Card className="glass-morphism border-0 shadow-lg">
@@ -219,7 +218,7 @@ export function ReportsCharts() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-sm">XAF{(product.revenue / 1000).toFixed(0)}K</p>
+                    <p className="font-medium text-sm">{(product.revenue / 1000).toFixed(0)}</p>
                   </div>
                 </div>
               ))}

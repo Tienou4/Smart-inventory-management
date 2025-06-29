@@ -24,7 +24,7 @@ const stats = [
   },
   {
     title: 'Valeur du Stock',
-    value: '€847K',
+    value: '847000FCFA',
     change: '+8.2%',
     changeType: 'positive' as const,
     icon: DollarSign,

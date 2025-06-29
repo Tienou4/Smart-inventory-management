@@ -35,10 +35,6 @@ export function ReportsHeader() {
               <FileText className="w-4 h-4 mr-2" />
               Rapport PDF
             </Button>
-            <Button variant="outline" size="sm">
-              <Download className="w-4 h-4 mr-2" />
-              Exporter Excel
-            </Button>
             <Button size="sm">
               <BarChart3 className="w-4 h-4 mr-2" />
               Nouveau Rapport
